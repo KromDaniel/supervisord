@@ -3,8 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/jessevdk/go-flags"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -12,11 +10,14 @@ import (
 	"strings"
 	"syscall"
 	"unicode"
+
+	"github.com/jessevdk/go-flags"
+	log "github.com/sirupsen/logrus"
 )
 
 type Options struct {
 	Configuration string `short:"c" long:"configuration" description:"the configuration file"`
-	Daemon        bool   `short:"d" long:"daemon" description:"run as daemon"`
+	Attached      bool   `short:"a" long:"attached" description:"run not as daemon"`
 	EnvFile       string `long:"env-file" description:"the environment file"`
 }
 
@@ -95,6 +96,7 @@ func LoadEnvFile() {
 // 6. ../supervisord.conf (Relative to the executable)
 func findSupervisordConf() (string, error) {
 	possibleSupervisordConf := []string{options.Configuration,
+		"../config/supervisord.conf",
 		"./supervisord.conf",
 		"./etc/supervisord.conf",
 		"/etc/supervisord.conf",
@@ -141,7 +143,7 @@ func main() {
 				fmt.Fprintln(os.Stdout, err)
 				os.Exit(0)
 			case flags.ErrCommandRequired:
-				if options.Daemon {
+				if !options.Attached {
 					Deamonize(RunServer)
 				} else {
 					RunServer()
